@@ -1,0 +1,259 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2821
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 classdef SplitQuaternionMatrixComplexRep\
+    % SPLITQUATERNIONMATRIXCOMPLEXREP Complex adjoint representation of split quaternion matrices\
+    %   This class represents an m\'d7n matrix with split quaternion entries as a\
+    %   complex 2m\'d72n matrix using the compact representation.\
+    %   \
+    %   For a split quaternion matrix Q = A + Bi + Cj + Dk, where A,B,C,D are m\'d7n real matrices,\
+    %   the complex adjoint representation is:\
+    %   \
+    %   M(Q) = [A + iB, C + iD;\
+    %           C - iD, A - iB]  (block matrix of size 2m\'d72n)\
+    %   \
+    %   This is constructed using Kronecker products with the 2x2 complex representation.\
+    \
+    properties\
+        complex_matrix double   % Complex 2m\'d72n matrix representation\
+        m int32                % Number of rows in original split quaternion matrix\
+        n int32                % Number of columns in original split quaternion matrix\
+    end\
+    \
+    methods\
+        %% Constructor from SplitQuaternionMatrix\
+        function obj = SplitQuaternionMatrixComplexRep(SQM)\
+            if nargin == 0\
+                obj.complex_matrix = [];\
+                obj.m = 0;\
+                obj.n = 0;\
+                return;\
+            end\
+            \
+            if ~isa(SQM, 'SplitQuaternionMatrix')\
+                error('Input must be a SplitQuaternionMatrix');\
+            end\
+            \
+            % Get dimensions\
+            obj.m = size(SQM.A, 1);\
+            obj.n = size(SQM.A, 2);\
+            \
+            % Check all components have same size\
+            if ~isequal(size(SQM.A), size(SQM.B), size(SQM.C), size(SQM.D), [obj.m, obj.n])\
+                error('All matrix components must have same dimensions');\
+            end\
+            \
+            % Initialize complex matrix\
+            obj.complex_matrix = zeros(2*obj.m, 2*obj.n, 'like', 1i);\
+            \
+            % Construct block matrix\
+            % Upper left block: A + iB\
+            for i = 1:obj.m\
+                for j = 1:obj.n\
+                    obj.complex_matrix(2*i-1, 2*j-1) = SQM.A(i,j) + 1i*SQM.B(i,j);\
+                end\
+            end\
+            \
+            % Upper right block: C + iD\
+            for i = 1:obj.m\
+                for j = 1:obj.n\
+                    obj.complex_matrix(2*i-1, 2*j) = SQM.C(i,j) + 1i*SQM.D(i,j);\
+                end\
+            end\
+            \
+            % Lower left block: C - iD\
+            for i = 1:obj.m\
+                for j = 1:obj.n\
+                    obj.complex_matrix(2*i, 2*j-1) = SQM.C(i,j) - 1i*SQM.D(i,j);\
+                end\
+            end\
+            \
+            % Lower right block: A - iB\
+            for i = 1:obj.m\
+                for j = 1:obj.n\
+                    obj.complex_matrix(2*i, 2*j) = SQM.A(i,j) - 1i*SQM.B(i,j);\
+                end\
+            end\
+        end\
+        \
+        %% Convert back to SplitQuaternionMatrix\
+        function SQM = toSplitQuaternionMatrix(obj)\
+            if isempty(obj.complex_matrix)\
+                SQM = SplitQuaternionMatrix();\
+                return;\
+            end\
+            \
+            % Initialize component matrices\
+            A = zeros(obj.m, obj.n);\
+            B = zeros(obj.m, obj.n);\
+            C = zeros(obj.m, obj.n);\
+            D = zeros(obj.m, obj.n);\
+            \
+            % Extract components from blocks\
+            for i = 1:obj.m\
+                for j = 1:obj.n\
+                    % Upper left: A + iB\
+                    val = obj.complex_matrix(2*i-1, 2*j-1);\
+                    A(i,j) = real(val);\
+                    B(i,j) = imag(val);\
+                    \
+                    % Upper right: C + iD\
+                    val = obj.complex_matrix(2*i-1, 2*j);\
+                    C(i,j) = real(val);\
+                    D(i,j) = imag(val);\
+                    \
+                    % Verify lower blocks match\
+                    val_lower_left = obj.complex_matrix(2*i, 2*j-1);\
+                    val_lower_right = obj.complex_matrix(2*i, 2*j);\
+                    \
+                    if abs(real(val_lower_left) - C(i,j)) > 1e-10 || ...\
+                       abs(imag(val_lower_left) + D(i,j)) > 1e-10\
+                        warning('Inconsistent matrix structure detected');\
+                    end\
+                    \
+                    if abs(real(val_lower_right) - A(i,j)) > 1e-10 || ...\
+                       abs(imag(val_lower_right) + B(i,j)) > 1e-10\
+                        warning('Inconsistent matrix structure detected');\
+                    end\
+                end\
+            end\
+            \
+            % Create SplitQuaternionMatrix\
+            SQM = SplitQuaternionMatrix(A, B, C, D);\
+        end\
+        \
+        %% Display\
+        function disp(obj)\
+            fprintf('Complex Adjoint Representation of Split Quaternion Matrix (%dx%d -> %dx%d)\\n', ...\
+                    obj.m, obj.n, 2*obj.m, 2*obj.n);\
+            \
+            if obj.m <= 3 && obj.n <= 3\
+                % Show full matrix for small dimensions\
+                disp(obj.complex_matrix);\
+            else\
+                % Show block structure\
+                fprintf('Block structure (each 2x2 block represents one split quaternion):\\n');\
+                \
+                for i = 1:min(2, obj.m)\
+                    for j = 1:min(2, obj.n)\
+                        fprintf('Block (%d,%d):\\n', i, j);\
+                        block = obj.complex_matrix(2*(i-1)+1:2*i, 2*(j-1)+1:2*j);\
+                        disp(block);\
+                    end\
+                end\
+            end\
+        end\
+        \
+        %% Matrix multiplication\
+        function R = mtimes(left, right)\
+            if isa(left, 'SplitQuaternionMatrixComplexRep') && ...\
+               isa(right, 'SplitQuaternionMatrixComplexRep')\
+                \
+                if left.n ~= right.m\
+                    error('Matrix dimensions must agree for multiplication');\
+                end\
+                \
+                % Multiply complex matrices\
+                complex_product = left.complex_matrix * right.complex_matrix;\
+                \
+                R = SplitQuaternionMatrixComplexRep();\
+                R.m = left.m;\
+                R.n = right.n;\
+                R.complex_matrix = complex_product;\
+                \
+            elseif isnumeric(left) && isscalar(left)\
+                % Scalar multiplication\
+                R = right;\
+                R.complex_matrix = left * R.complex_matrix;\
+                \
+            elseif isnumeric(right) && isscalar(right)\
+                % Scalar multiplication\
+                R = left;\
+                R.complex_matrix = R.complex_matrix * right;\
+                \
+            else\
+                error('Invalid multiplication');\
+            end\
+        end\
+        \
+        %% Hermitian transpose (conjugate transpose)\
+        function R = ctranspose(obj)\
+            R = obj;\
+            R.complex_matrix = R.complex_matrix';\
+            % Swap m and n\
+            temp = R.m;\
+            R.m = R.n;\
+            R.n = temp;\
+        end\
+        \
+        %% Determinant (for square matrices)\
+        function detVal = det(obj)\
+            if obj.m ~= obj.n\
+                error('Matrix must be square for determinant');\
+            end\
+            \
+            detVal = det(obj.complex_matrix);\
+        end\
+        \
+        %% Eigenvalues\
+        function eigVals = eig(obj)\
+            if obj.m ~= obj.n\
+                error('Matrix must be square for eigenvalues');\
+            end\
+            \
+            eigVals = eig(obj.complex_matrix);\
+        end\
+    end\
+    \
+    methods (Static)\
+        %% Compare real and complex representations\
+        function compareRepresentations(SQM)\
+            fprintf('Comparing real and complex representations:\\n\\n');\
+            fprintf('Original split quaternion matrix:\\n');\
+            disp(SQM);\
+            \
+            % Convert to both representations\
+            real_rep = SplitQuaternionMatrixRealRep(SQM);\
+            complex_rep = SplitQuaternionMatrixComplexRep(SQM);\
+            \
+            fprintf('\\nReal representation (%dx%d):\\n', size(real_rep.real_matrix));\
+            if size(real_rep.real_matrix, 1) <= 8\
+                disp(real_rep.real_matrix);\
+            else\
+                fprintf('(Matrix too large to display)\\n');\
+            end\
+            \
+            fprintf('\\nComplex representation (%dx%d):\\n', size(complex_rep.complex_matrix));\
+            if size(complex_rep.complex_matrix, 1) <= 6\
+                disp(complex_rep.complex_matrix);\
+            else\
+                fprintf('(Matrix too large to display)\\n');\
+            end\
+            \
+            % Convert back and verify\
+            SQM_from_real = real_rep.toSplitQuaternionMatrix();\
+            SQM_from_complex = complex_rep.toSplitQuaternionMatrix();\
+            \
+            fprintf('\\nVerification:\\n');\
+            fprintf('Error real -> SQM: %g\\n', ...\
+                    norm([SQM.A - SQM_from_real.A; SQM.B - SQM_from_real.B;\
+                          SQM.C - SQM_from_real.C; SQM.D - SQM_from_real.D], 'fro'));\
+            fprintf('Error complex -> SQM: %g\\n', ...\
+                    norm([SQM.A - SQM_from_complex.A; SQM.B - SQM_from_complex.B;\
+                          SQM.C - SQM_from_complex.C; SQM.D - SQM_from_complex.D], 'fro'));\
+            \
+            % Storage comparison\
+            real_storage = numel(real_rep.real_matrix);\
+            complex_storage = numel(complex_rep.complex_matrix);\
+            \
+            fprintf('\\nStorage comparison:\\n');\
+            fprintf('Real representation: %d elements\\n', real_storage);\
+            fprintf('Complex representation: %d elements\\n', complex_storage);\
+            fprintf('Ratio (complex/real): %.2f\\n', complex_storage / real_storage);\
+        end\
+    end\
+end}

@@ -1,0 +1,416 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2821
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 classdef SplitQuaternionMatrixRealRep\
+    % SPLITQUATERNIONMATRIXREALREP Real adjoint representation of split quaternion matrices\
+    %   This class represents an m\'d7n matrix with split quaternion entries as a\
+    %   real 4m\'d74n matrix using the Kronecker product formulation.\
+    %   \
+    %   For a split quaternion matrix Q = A + Bi + Cj + Dk, where A,B,C,D are m\'d7n real matrices,\
+    %   the real adjoint representation is:\
+    %   \
+    %   M(Q) = kron(I_m, I_4) * [vec(A) vec(B) vec(C) vec(D)] * [I_n \uc0\u8855  [I_4; M_i; M_j; M_k]]\
+    %   \
+    %   Alternatively, we can construct it block by block:\
+    %   \
+    %   M(Q)_\{(4i-3:4i, 4j-3:4j)\} = a_ij*I_4 + b_ij*M_i + c_ij*M_j + d_ij*M_k\
+    %   \
+    %   where M_i, M_j, M_k are the basis matrices for split quaternion representation.\
+    \
+    properties\
+        real_matrix double   % Real 4m\'d74n matrix representation\
+        m int32             % Number of rows in original split quaternion matrix\
+        n int32             % Number of columns in original split quaternion matrix\
+    end\
+    \
+    properties (Constant)\
+        % Basis matrices for split quaternion representation\
+        I4 = eye(4);\
+        \
+        Mi = [0 -1  0  0;\
+              1  0  0  0;\
+              0  0  0  1;\
+              0  0 -1  0];\
+        \
+        Mj = [0  0  1  0;\
+              0  0  0  1;\
+              1  0  0  0;\
+              0 -1  0  0];\
+        \
+        Mk = [0  0  0  1;\
+              0  0  1  0;\
+              0 -1  0  0;\
+             -1  0  0  0];\
+    end\
+    \
+    methods\
+        %% Constructor from SplitQuaternionMatrix\
+        function obj = SplitQuaternionMatrixRealRep(SQM)\
+            if nargin == 0\
+                obj.real_matrix = [];\
+                obj.m = 0;\
+                obj.n = 0;\
+                return;\
+            end\
+            \
+            if ~isa(SQM, 'SplitQuaternionMatrix')\
+                error('Input must be a SplitQuaternionMatrix');\
+            end\
+            \
+            % Get dimensions\
+            obj.m = size(SQM.A, 1);\
+            obj.n = size(SQM.A, 2);\
+            \
+            % Check all components have same size\
+            if ~isequal(size(SQM.A), size(SQM.B), size(SQM.C), size(SQM.D), [obj.m, obj.n])\
+                error('All matrix components must have same dimensions');\
+            end\
+            \
+            % Initialize real matrix\
+            obj.real_matrix = zeros(4*obj.m, 4*obj.n);\
+            \
+            % Construct block by block\
+            for i = 1:obj.m\
+                for j = 1:obj.n\
+                    % Get block indices\
+                    row_start = 4*(i-1) + 1;\
+                    row_end = 4*i;\
+                    col_start = 4*(j-1) + 1;\
+                    col_end = 4*j;\
+                    \
+                    % Construct block matrix for this element\
+                    block = SQM.A(i,j) * obj.I4 + ...\
+                            SQM.B(i,j) * obj.Mi + ...\
+                            SQM.C(i,j) * obj.Mj + ...\
+                            SQM.D(i,j) * obj.Mk;\
+                    \
+                    % Assign to real matrix\
+                    obj.real_matrix(row_start:row_end, col_start:col_end) = block;\
+                end\
+            end\
+        end\
+        \
+        %% Convert back to SplitQuaternionMatrix\
+        function SQM = toSplitQuaternionMatrix(obj)\
+            if isempty(obj.real_matrix)\
+                SQM = SplitQuaternionMatrix();\
+                return;\
+            end\
+            \
+            % Initialize component matrices\
+            A = zeros(obj.m, obj.n);\
+            B = zeros(obj.m, obj.n);\
+            C = zeros(obj.m, obj.n);\
+            D = zeros(obj.m, obj.n);\
+            \
+            % Extract components from blocks\
+            for i = 1:obj.m\
+                for j = 1:obj.n\
+                    % Get block indices\
+                    row_start = 4*(i-1) + 1;\
+                    row_end = 4*i;\
+                    col_start = 4*(j-1) + 1;\
+                    col_end = 4*j;\
+                    \
+                    % Extract block\
+                    block = obj.real_matrix(row_start:row_end, col_start:col_end);\
+                    \
+                    % Extract components using trace formulas\
+                    A(i,j) = 0.25 * trace(block);\
+                    B(i,j) = -0.25 * trace(block * obj.Mi');\
+                    C(i,j) = -0.25 * trace(block * obj.Mj');\
+                    D(i,j) = -0.25 * trace(block * obj.Mk');\
+                end\
+            end\
+            \
+            % Create SplitQuaternionMatrix\
+            SQM = SplitQuaternionMatrix(A, B, C, D);\
+        end\
+        \
+        %% Display\
+        function disp(obj)\
+            fprintf('Real Adjoint Representation of Split Quaternion Matrix (%dx%d -> %dx%d)\\n', ...\
+                    obj.m, obj.n, 4*obj.m, 4*obj.n);\
+            \
+            if obj.m <= 4 && obj.n <= 4\
+                % Show full matrix for small dimensions\
+                disp(obj.real_matrix);\
+            else\
+                % Show block structure\
+                fprintf('Block structure (each %dx%d block represents one split quaternion):\\n', 4, 4);\
+                \
+                for i = 1:min(3, obj.m)\
+                    for j = 1:min(3, obj.n)\
+                        fprintf('Block (%d,%d):\\n', i, j);\
+                        block = obj.real_matrix(4*(i-1)+1:4*i, 4*(j-1)+1:4*j);\
+                        disp(block);\
+                    end\
+                end\
+                \
+                if obj.m > 3 || obj.n > 3\
+                    fprintf('... (matrix truncated, %d blocks total)\\n', obj.m * obj.n);\
+                end\
+            end\
+            \
+            % Show original dimensions\
+            fprintf('\\nOriginal: %dx%d split quaternion matrix\\n', obj.m, obj.n);\
+            fprintf('Real representation: %dx%d real matrix\\n', 4*obj.m, 4*obj.n);\
+        end\
+        \
+        %% Matrix multiplication (real adjoint representation)\
+        function R = mtimes(left, right)\
+            % Handle multiplication of two real adjoint representations\
+            if isa(left, 'SplitQuaternionMatrixRealRep') && ...\
+               isa(right, 'SplitQuaternionMatrixRealRep')\
+                \
+                % Check dimensions\
+                if left.n ~= right.m\
+                    error('Matrix dimensions must agree for multiplication');\
+                end\
+                \
+                % Multiply real matrices\
+                real_product = left.real_matrix * right.real_matrix;\
+                \
+                % Create result (dimensions: left.m \'d7 right.n)\
+                R = SplitQuaternionMatrixRealRep();\
+                R.m = left.m;\
+                R.n = right.n;\
+                R.real_matrix = real_product;\
+                \
+            elseif isnumeric(left) && isscalar(left) && ...\
+                   isa(right, 'SplitQuaternionMatrixRealRep')\
+                % Scalar multiplication\
+                R = right;\
+                R.real_matrix = left * R.real_matrix;\
+                \
+            elseif isa(left, 'SplitQuaternionMatrixRealRep') && ...\
+                   isnumeric(right) && isscalar(right)\
+                % Scalar multiplication (other side)\
+                R = left;\
+                R.real_matrix = R.real_matrix * right;\
+                \
+            else\
+                error('Invalid multiplication for SplitQuaternionMatrixRealRep');\
+            end\
+        end\
+        \
+        %% Addition\
+        function R = plus(left, right)\
+            if ~isa(left, 'SplitQuaternionMatrixRealRep') || ...\
+               ~isa(right, 'SplitQuaternionMatrixRealRep')\
+                error('Both operands must be SplitQuaternionMatrixRealRep');\
+            end\
+            \
+            if left.m ~= right.m || left.n ~= right.n\
+                error('Matrix dimensions must agree for addition');\
+            end\
+            \
+            R = left;\
+            R.real_matrix = left.real_matrix + right.real_matrix;\
+        end\
+        \
+        %% Subtraction\
+        function R = minus(left, right)\
+            if ~isa(left, 'SplitQuaternionMatrixRealRep') || ...\
+               ~isa(right, 'SplitQuaternionMatrixRealRep')\
+                error('Both operands must be SplitQuaternionMatrixRealRep');\
+            end\
+            \
+            if left.m ~= right.m || left.n ~= right.n\
+                error('Matrix dimensions must agree for subtraction');\
+            end\
+            \
+            R = left;\
+            R.real_matrix = left.real_matrix - right.real_matrix;\
+        end\
+        \
+        %% Transpose\
+        function R = transpose(obj)\
+            R = obj;\
+            R.real_matrix = R.real_matrix';\
+            % Swap m and n for transpose\
+            temp = R.m;\
+            R.m = R.n;\
+            R.n = temp;\
+        end\
+        \
+        %% Conjugate transpose\
+        function R = ctranspose(obj)\
+            % For split quaternions, conjugate transpose involves both\
+            % matrix transpose and split quaternion conjugation\
+            \
+            % Convert back to split quaternion matrix, conjugate, then convert back\
+            SQM = obj.toSplitQuaternionMatrix();\
+            SQM_conj = ctranspose(SQM);  % Uses your existing implementation\
+            R = SplitQuaternionMatrixRealRep(SQM_conj);\
+        end\
+        \
+        %% Norm (Frobenius-style)\
+        function n = norm(obj)\
+            % Calculate split quaternion matrix norm using real representation\
+            SQM = obj.toSplitQuaternionMatrix();\
+            n = SQM.norm();  % Uses your existing norm method\
+        end\
+        \
+        %% Extract block for specific element\
+        function block = getElementBlock(obj, i, j)\
+            if i < 1 || i > obj.m || j < 1 || j > obj.n\
+                error('Indices out of bounds');\
+            end\
+            \
+            row_start = 4*(i-1) + 1;\
+            row_end = 4*i;\
+            col_start = 4*(j-1) + 1;\
+            col_end = 4*j;\
+            \
+            block = obj.real_matrix(row_start:row_end, col_start:col_end);\
+        end\
+        \
+        %% Set block for specific element\
+        function obj = setElementBlock(obj, i, j, block)\
+            if i < 1 || i > obj.m || j < 1 || j > obj.n\
+                error('Indices out of bounds');\
+            end\
+            \
+            if ~isequal(size(block), [4, 4])\
+                error('Block must be 4x4 matrix');\
+            end\
+            \
+            row_start = 4*(i-1) + 1;\
+            row_end = 4*i;\
+            col_start = 4*(j-1) + 1;\
+            col_end = 4*j;\
+            \
+            obj.real_matrix(row_start:row_end, col_start:col_end) = block;\
+        end\
+        \
+        %% Verify representation\
+        function isValid = verifyRepresentation(obj)\
+            % Convert back and forth to verify\
+            SQM1 = obj.toSplitQuaternionMatrix();\
+            obj2 = SplitQuaternionMatrixRealRep(SQM1);\
+            \
+            % Check if real matrices are close\
+            isValid = norm(obj.real_matrix - obj2.real_matrix, 'fro') < 1e-10;\
+        end\
+    end\
+    \
+    methods (Static)\
+        %% Create from component matrices directly\
+        function obj = fromComponents(A, B, C, D)\
+            SQM = SplitQuaternionMatrix(A, B, C, D);\
+            obj = SplitQuaternionMatrixRealRep(SQM);\
+        end\
+        \
+        %% Test isomorphism properties\
+        function testIsomorphism()\
+            fprintf('Testing isomorphism properties of real adjoint representation:\\n\\n');\
+            \
+            % Create random split quaternion matrices\
+            m = 2; n = 2;\
+            A = randn(m, n);\
+            B = randn(m, n);\
+            C = randn(m, n);\
+            D = randn(m, n);\
+            \
+            SQM1 = SplitQuaternionMatrix(A, B, C, D);\
+            SQM2 = SplitQuaternionMatrix(randn(m, n), randn(m, n), ...\
+                                         randn(m, n), randn(m, n));\
+            \
+            % Convert to real representation\
+            R1 = SplitQuaternionMatrixRealRep(SQM1);\
+            R2 = SplitQuaternionMatrixRealRep(SQM2);\
+            \
+            fprintf('Original split quaternion matrices:\\n');\
+            fprintf('SQM1:\\n'); disp(SQM1);\
+            fprintf('SQM2:\\n'); disp(SQM2);\
+            \
+            % Test multiplication preservation\
+            fprintf('\\n1. Testing multiplication preservation:\\n');\
+            \
+            % Direct multiplication\
+            SQM_product = SQM1 * SQM2;\
+            \
+            % Multiplication via real representation\
+            R_product = R1 * R2;\
+            SQM_from_R = R_product.toSplitQuaternionMatrix();\
+            \
+            fprintf('Direct product (SQM1 * SQM2):\\n');\
+            disp(SQM_product);\
+            fprintf('Product via real representation:\\n');\
+            disp(SQM_from_R);\
+            \
+            % Calculate error\
+            error_A = norm(SQM_product.A - SQM_from_R.A, 'fro');\
+            error_B = norm(SQM_product.B - SQM_from_R.B, 'fro');\
+            error_C = norm(SQM_product.C - SQM_from_R.C, 'fro');\
+            error_D = norm(SQM_product.D - SQM_from_R.D, 'fro');\
+            \
+            fprintf('\\nMultiplication errors:\\n');\
+            fprintf('  A component: %g\\n', error_A);\
+            fprintf('  B component: %g\\n', error_B);\
+            fprintf('  C component: %g\\n', error_C);\
+            fprintf('  D component: %g\\n', error_D);\
+            \
+            if max([error_A, error_B, error_C, error_D]) < 1e-10\
+                fprintf('\uc0\u10003  Multiplication preserved!\\n');\
+            else\
+                fprintf('\uc0\u10007  Multiplication not preserved!\\n');\
+            end\
+            \
+            % Test addition preservation\
+            fprintf('\\n2. Testing addition preservation:\\n');\
+            \
+            SQM_sum = SQM1 + SQM2;\
+            R_sum = R1 + R2;\
+            SQM_from_R_sum = R_sum.toSplitQuaternionMatrix();\
+            \
+            error_sum = norm([SQM_sum.A - SQM_from_R_sum.A; ...\
+                              SQM_sum.B - SQM_from_R_sum.B; ...\
+                              SQM_sum.C - SQM_from_R_sum.C; ...\
+                              SQM_sum.D - SQM_from_R_sum.D], 'fro');\
+            \
+            if error_sum < 1e-10\
+                fprintf('\uc0\u10003  Addition preserved!\\n');\
+            else\
+                fprintf('\uc0\u10007  Addition not preserved! Error: %g\\n', error_sum);\
+            end\
+            \
+            % Test scalar multiplication\
+            fprintf('\\n3. Testing scalar multiplication preservation:\\n');\
+            \
+            scalar = 2.5;\
+            SQM_scaled = SQM1 * scalar;\
+            R_scaled = R1 * scalar;\
+            SQM_from_R_scaled = R_scaled.toSplitQuaternionMatrix();\
+            \
+            error_scalar = norm([SQM_scaled.A - SQM_from_R_scaled.A; ...\
+                                 SQM_scaled.B - SQM_from_R_scaled.B; ...\
+                                 SQM_scaled.C - SQM_from_R_scaled.C; ...\
+                                 SQM_scaled.D - SQM_from_R_scaled.D], 'fro');\
+            \
+            if error_scalar < 1e-10\
+                fprintf('\uc0\u10003  Scalar multiplication preserved!\\n');\
+            else\
+                fprintf('\uc0\u10007  Scalar multiplication not preserved! Error: %g\\n', error_scalar);\
+            end\
+        end\
+        \
+        %% Show block structure\
+        function showBlockStructure(m, n)\
+            fprintf('Block structure for %dx%d split quaternion matrix:\\n', m, n);\
+            fprintf('Real adjoint representation: %dx%d real matrix\\n\\n', 4*m, 4*n);\
+            \
+            for i = 1:m\
+                for j = 1:n\
+                    fprintf('Position (%d,%d) maps to rows %d:%d, cols %d:%d\\n', ...\
+                            i, j, 4*(i-1)+1, 4*i, 4*(j-1)+1, 4*j);\
+                end\
+            end\
+        end\
+    end\
+end}
