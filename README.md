@@ -51,6 +51,7 @@ addpath(genpath('path/to/split-quaternion-toolbox'));``
 ## Quick Start
 ## Creating Split Quaternions
 
+```bash
 % Create a split quaternion
 q = SplitQuaternion(1, 2, 3, 4);
 
