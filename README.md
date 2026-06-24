@@ -191,7 +191,15 @@ rotor = SplitQuaternion.rotor(angle, axis);
 q = SplitQuaternion(0, 1, 0, 0);  % Vector to rotate
 q_rotated = rotor * q * conj(rotor);
 ```
-
+#### Mathematical Notes
+## Split Quaternion Multiplication
+For split quaternions `p = a + bi + cj + dk` and `q = e + fi + gj + hk`:
+```bash
+p * q = (ae - bf + cg + dh) +
+        (af + be - ch + dg)i +
+        (ag + ce - bf + dh)j +
+        (ah + de + bg - cf)k
+```
 
 
 
