@@ -115,10 +115,10 @@ q_norm = q.normalize();
 
 % Dot product
 d = dot(p, q);                 % a1*a2 + b1*b2 - c1*c2 - d1*d2
-
 ```
 
 ## Basic Operations
+```bash
 % Create from component matrices
 A = randn(3, 3);
 B = randn(3, 3);
@@ -135,6 +135,39 @@ R = SplitQuaternionMatrix.rand(3, 3);     % Random matrix
 Q_real = SplitQuaternionMatrix.fromReal(A);     % Imaginary parts zero
 Q_complex = SplitQuaternionMatrix.fromComplex(z); % Complex to split quaternion
 ```
+
+## Matrix Operations
+```bash
+Q = SplitQuaternionMatrix.rand(3, 3);
+P = SplitQuaternionMatrix.rand(3, 3);
+
+% Basic matrix operations
+R = Q + P;                     % Addition
+R = Q - P;                     % Subtraction
+R = Q * P;                     % Matrix multiplication
+R = Q .* P;                    % Element-wise multiplication
+R = Q / 2;                     % Scalar division
+
+% Matrix properties
+t = trace(Q);                  % Trace
+s = sum(Q);                    % Sum of elements
+m = mean(Q);                   % Mean of elements
+d = diag(Q);                   % Extract diagonal
+
+% Conjugations
+conj_Q = conj(Q);              % Full conjugate
+conj_i = Q.conj_i();           % Conjugate with respect to i
+conj_j = Q.conj_j();           % Conjugate with respect to j
+conj_k = Q.conj_k();           % Conjugate with respect to k
+
+% Conversions
+mat = Q.full();                % 2x2 block matrix representation
+mat = Q.realMatrix();          % Real 4x4 matrix representation
+cell_mat = Q.toCell();         % Cell array of components
+[A, B, C, D] = Q.parts();      % Extract components
+```
+
+
 
 
 
