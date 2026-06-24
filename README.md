@@ -44,5 +44,5 @@ git clone https://github.com/yourusername/split-quaternion-toolbox.git
 
 2. Add the toolbox to your MATLAB path:
 
-matlab
+```bash
 addpath(genpath('path/to/split-quaternion-toolbox'));
