@@ -201,6 +201,13 @@ p * q = (ae - bf + cg + dh) +
         (ah + de + bg - cf)k
 ```
 
+## Indefinite Norm
+The norm of a split quaternion is:
+```bash
+N(q) = a² + b² - c² - d²
+```
+This can be positive, negative, or zero, unlike the definite norm of standard quaternions.
+
 
 
 
