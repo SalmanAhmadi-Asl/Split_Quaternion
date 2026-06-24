@@ -47,3 +47,21 @@ git clone https://github.com/yourusername/split-quaternion-toolbox.git
 
 ``
 addpath(genpath('path/to/split-quaternion-toolbox'));``
+
+## Quick Start
+## Creating Split Quaternions
+
+matlab
+% Create a split quaternion
+q = SplitQuaternion(1, 2, 3, 4);
+
+% Using static constructors
+zero = SplitQuaternion.zeros();        % 0 + 0i + 0j + 0k
+identity = SplitQuaternion.eye();       % 1 + 0i + 0j + 0k
+i_basis = SplitQuaternion.i();          % 0 + 1i + 0j + 0k
+j_basis = SplitQuaternion.j();          % 0 + 0i + 1j + 0k
+k_basis = SplitQuaternion.k();          % 0 + 0i + 0j + 1k
+random = SplitQuaternion.random();      % Random components in [0,1]
+
+% From vector
+q = SplitQuaternion.fromVector([1, 2, 3, 4]);
