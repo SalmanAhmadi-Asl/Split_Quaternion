@@ -65,3 +65,76 @@ random = SplitQuaternion.random();      % Random components in [0,1]
 
 % From vector
 q = SplitQuaternion.fromVector([1, 2, 3, 4]);
+```
+
+## Basic Operations
+```bash
+p = SplitQuaternion(1, 2, 3, 4);
+q = SplitQuaternion(5, 6, 7, 8);
+
+% Addition and subtraction
+r = p + q;
+r = p - q;
+
+% Multiplication (split quaternion multiplication)
+r = p * q;                    % Matrix multiplication
+r = p .* q;                   % Element-wise multiplication
+
+% Scalar operations
+r = p + 5;                    % Add scalar to real part
+r = 5 * p;                    % Scalar multiplication
+r = p / 2;                    % Scalar division
+
+% Algebraic properties
+conj_q = conj(q);              % Conjugate: a - bi - cj - dk
+n = norm(q);                   % Indefinite norm: a² + b² - c² - d²
+mag = magnitude(q);            % sqrt(|norm(q)|)
+inv_q = inv(q);                % Multiplicative inverse
+q_power = q^3;                 % Integer power
+```
+
+## Basic Operations
+```bash
+q = SplitQuaternion(1, 2, 3, 4);
+
+% Exponential and logarithm
+exp_q = exp(q);
+log_q = log(q);
+
+% Component extraction
+[a, b, c, d] = q.parts();
+vec = q.vector();              % Returns [b, c, d]
+full_vec = q.toVector();       % Returns [a, b, c, d]
+
+% Checks
+is_pure = q.isPure();          % Check if pure (a = 0)
+is_unit = q.isUnit();          % Check if unit (|norm| = 1)
+
+% Normalization
+q_norm = q.normalize();
+
+% Dot product
+d = dot(p, q);                 % a1*a2 + b1*b2 - c1*c2 - d1*d2
+
+```
+
+## Basic Operations
+% Create from component matrices
+A = randn(3, 3);
+B = randn(3, 3);
+C = randn(3, 3);
+D = randn(3, 3);
+Q = SplitQuaternionMatrix(A, B, C, D);
+
+% Using static constructors
+Z = SplitQuaternionMatrix.zeros(3, 3);    % Zero matrix
+I = SplitQuaternionMatrix.eye(3);         % Identity matrix
+R = SplitQuaternionMatrix.rand(3, 3);     % Random matrix
+
+% From real or complex matrices
+Q_real = SplitQuaternionMatrix.fromReal(A);     % Imaginary parts zero
+Q_complex = SplitQuaternionMatrix.fromComplex(z); % Complex to split quaternion
+```
+
+
+
