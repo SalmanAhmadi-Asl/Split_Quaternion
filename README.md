@@ -238,3 +238,14 @@ test_split_quaternion_matrix();
 
 3. Matrix multiplication with numeric matrices assumes the numeric matrix is of compatible dimensions
 
+## Citation
+If you use this toolbox in your research, please cite:
+
+```bash
+@misc{yourname2026splitquaternion,
+  title={Split Quaternion Toolbox: A MATLAB Implementation},
+  author={Your Name},
+  year={2026},
+  howpublished={\url{https://github.com/yourusername/split-quaternion-toolbox}}
+}
+```
