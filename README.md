@@ -39,12 +39,11 @@ Unlike standard quaternions, split quaternions have an indefinite norm: `N(q) = 
 ## Installation
 
 1. Clone this repository:
-2. 
-`
+   
 git clone https://github.com/yourusername/split-quaternion-toolbox.git
 `
 
-3. Add the toolbox to your MATLAB path:
+2. Add the toolbox to your MATLAB path:
 
 ``
 addpath(genpath('path/to/split-quaternion-toolbox'));``
