@@ -229,7 +229,7 @@ test_split_quaternion_matrix();
 
 1. Matrix operations leverage MATLAB's optimized matrix multiplication for component-wise operations
 
-2. For large matrices, consider using the `full()` or `realMatrix()` conversions if you need to use standard MATLAB matrix functions
+2. For large matrices, consider using the `full_()` or `realMatrix()` conversions if you need to use standard MATLAB matrix functions
 
 ## Limitations
 
