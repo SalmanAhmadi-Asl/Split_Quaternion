@@ -243,7 +243,7 @@ test_split_quaternion_matrix();
 If you use this toolbox in your research, please cite:
 
 ```bash
-@misc{yourname2026splitquaternion,
+@misc{2026splitquaternion,
   title={Split Quaternion Toolbox: A MATLAB Implementation},
   author={Your Name},
   year={2026},
