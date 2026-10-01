@@ -1,6 +1,6 @@
 # Split Quaternion Toolbox
 
-A MATLAB implementation of split quaternions and split quaternion matrices with comprehensive algebraic operations and matrix functionalities.
+A MATLAB implementation of split quaternions and split quaternion matrices with algebraic operations and matrix functionalities.
 
 ## Overview
 
