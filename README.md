@@ -181,17 +181,6 @@ Q(2, 3) = SplitQuaternion(1, 2, 3, 4);
 Q(1:2, 1:2) = SplitQuaternionMatrix.eye(2);
 ```
 
-## Rotation Rotors
-```bash
-% Create a rotation rotor
-axis = SplitQuaternion(0, 1, 0, 0);  % Pure split quaternion (i direction)
-angle = pi/4;
-rotor = SplitQuaternion.rotor(angle, axis);
-
-% Apply rotation to a split quaternion
-q = SplitQuaternion(0, 1, 0, 0);  % Vector to rotate
-q_rotated = rotor * q * conj(rotor);
-```
 #### Mathematical Notes
 ## Split Quaternion Multiplication
 For split quaternions `p = a + bi + cj + dk` and `q = e + fi + gj + hk`:
