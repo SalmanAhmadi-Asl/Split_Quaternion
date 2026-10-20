@@ -96,7 +96,7 @@ q_power = q^3;                 % Integer power
 
 ## Basic Operations
 ```bash
-q = SplitQuaternion(1, 2, 3, 4);
+q = SplitQuaternion(4, 3, 2, 1);
 
 % Exponential and logarithm
 exp_q = exp(q);
