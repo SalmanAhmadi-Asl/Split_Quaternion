@@ -9,7 +9,6 @@ function [C, U, R] = cur_split(A,k)
 %       C - m x c matrix of selected columns
 %       U - c x r core matrix
 %       R - r x n matrix of selected rows
-%       error - Frobenius norm error ||A - C*U*R||_F
 
     h=size(A);
     m=h(1);
@@ -36,20 +35,5 @@ function [C, U, R] = cur_split(A,k)
 CP = mp_split_quat(C);
 RP = mp_split_quat(R);
     U=CP*A*RP;
-    % Alternative method: More stable for ill-conditioned matrices
-    % [U_W, S_W, V_W] = svd(W, 'econ');
-    % S_W_inv = diag(1 ./ diag(S_W(1:k, 1:k)));
-    % U = V_W(:, 1:k) * S_W_inv * U_W(:, 1:k)';
-    
-    % Step 4: Compute approximation and error
-    %approx = C * U * R;
-%    error = norm(A - approx, 'fro')
-    
-    % Display results
-%     fprintf('CUR Decomposition Results:\n');
-%     fprintf('Original matrix size: %d x %d\n', m, n);
-%     fprintf('Selected columns: %d, Selected rows: %d\n', c, r);
-%     fprintf('Target rank: %d\n', k);
-%     fprintf('Approximation error (Frobenius norm): %.4f\n', error);
-%     fprintf('Relative error: %.4f\n', error / norm(A, 'fro'));
+
 end
