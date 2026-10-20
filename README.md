@@ -162,10 +162,10 @@ conj_j = Q.conj_j();           % Conjugate with respect to j
 conj_k = Q.conj_k();           % Conjugate with respect to k
 
 % Conversions
-mat = Q.full();                % 2x2 block matrix representation
+mat = Q.full_();                % 2x2 block matrix representation
 mat = Q.realMatrix();          % Real 4x4 matrix representation
 cell_mat = Q.toCell();         % Cell array of components
-[A, B, C, D] = Q.parts();      % Extract components
+[A, B, C, D] = parts(Q);      % Extract components
 ```
 
 ## Matrix Indexing
