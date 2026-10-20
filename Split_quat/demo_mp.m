@@ -1,17 +1,16 @@
 clc;clear all
 
-m=20;
-n=30;
+m=500;
+n=300;
 
 A1=randn(m,n);A2=randn(m,n);A3=rand(m,n);A4=rand(m,n);
 A=SplitQuaternionMatrix(A1,A2,A3,A4);
-% X=pseudoinverse_gradient(A,200,1e-7);
 
 
 
-%%
+%
 
-X = pseudoinverse_ben_israel(A, 50, 1e-7);
+X = pseudoinverse_ben_israel(A, 40, 1e-7,.00001);
 
 % X=mp_split_quat(A);
 
