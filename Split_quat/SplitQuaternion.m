@@ -23,11 +23,6 @@ classdef SplitQuaternion
             fprintf('(%g) + (%gi) + (%gj) + (%gk)\n',q.a,q.b,q.c,q.d);
         end
 
-        %% Addition
-%         function r = plus(p,q)
-%             r = SplitQuaternion( ...
-%                 p.a+q.a, p.b+q.b, p.c+q.c, p.d+q.d);
-%         end
 %% Addition
 function r = plus(p,q)
     % Handle four cases:
@@ -63,11 +58,7 @@ function r = plus(p,q)
     end
 end
 
-        %% Subtraction
-%         function r = minus(p,q)
-%             r = SplitQuaternion( ...
-%                 p.a-q.a, p.b-q.b, p.c-q.c, p.d-q.d);
-%         end
+
 %% Subtraction
 function r = minus(p,q)
     % Handle four cases:
@@ -266,6 +257,18 @@ end
         function r = conj(q)
             r = SplitQuaternion(q.a.',-q.b.',-q.c.',-q.d.');
         end
+                %% Conjugate-i
+        function r = conj_i(q)
+            r = SplitQuaternion(q.a.',-q.b.',q.c.',q.d.');
+        end               
+        %% Conjugate-j
+        function r = conj_j(q)
+            r = SplitQuaternion(q.a.',q.b.',-q.c.',q.d.');
+        end
+                %% Conjugate-k
+        function r = conj_k(q)
+            r = SplitQuaternion(q.a.',q.b.',q.c.',-q.d.');
+        end
                 %% Get real part (scalar part)
         function realPart = real(q)
             % Returns the real part (A component) as a numeric matrix
@@ -277,7 +280,38 @@ end
             % Returns the imaginary parts as a cell array
             % {B, C, D} or optionally combine them if desired
             imagPart = SplitQuaternion(0,q.b,q.c,q.d);
+        end        
+        %% Horizontal concatenation
+        function R = horzcat(varargin)
+            A_cat = []; B_cat = []; C_cat = []; D_cat = [];
+            for i = 1:nargin
+                if isa(varargin{i}, 'SplitQuaternion')
+                    A_cat = [A_cat, varargin{i}.a];
+                    B_cat = [B_cat, varargin{i}.b];
+                    C_cat = [C_cat, varargin{i}.c];
+                    D_cat = [D_cat, varargin{i}.d];
+                else
+                    error('All inputs must be SplitQuaternion');
+                end
+            end
+            R = SplitQuaternionMatrix(A_cat, B_cat, C_cat, D_cat);
+        end      
+        %% Vertical concatenation
+        function R = vertcat(varargin)
+            A_cat = []; B_cat = []; C_cat = []; D_cat = [];
+            for i = 1:nargin
+                if isa(varargin{i}, 'SplitQuaternion')
+                    A_cat = [A_cat; varargin{i}.a];
+                    B_cat = [B_cat; varargin{i}.b];
+                    C_cat = [C_cat; varargin{i}.b];
+                    D_cat = [D_cat; varargin{i}.d];
+                else
+                    error('All inputs must be SplitQuaternion');
+                end
+            end
+            R = SplitQuaternionMatrix(A_cat, B_cat, C_cat, D_cat);
         end
+
                         %% Get specific imaginary parts
         function part = imagi(q, i)
             % Get specific imaginary part: i=1 for B, i=2 for C, i=3 for D
@@ -424,6 +458,47 @@ end
                 axis(2)*sin(angle/2), ...
                 axis(3)*sin(angle/2));
         end
+
+        function Q = SplitQuaternionRealRep(X)
+        A1 = X.a;
+        A2 = X.b;
+        A3 = X.c;
+        A4 = X.d;
+        Q = [A1, -A2, A3, A4;
+             A2,  A1, A4, -A3;
+             A3,  A4, A1, -A2;
+             A4, -A3, A2,  A1];
+    end
+    
+    function X = RealRepToSplitQuaternion(Q)
+        A1 = Q(1,1);
+        A2 = Q(2,1);
+        A3 = Q(3,1);
+        A4 = Q(4,1);
+        X = SplitQuaternion(A1, A2, A3, A4);
+    end
+
+    function [Q]=SplitQuaternionComplexRep(X)
+      A1=X.a;
+      A2=X.b;
+      A3=X.c;
+      A4=X.d;
+      Q=[A1+i*A2,A3+i*A4;
+      A3-i*A4,A1-i*A2];
+    end
+
+    function X = ComplexRepToSplitQuaternion(Q)
+T=Q(1,1);
+H=Q(2,1);
+A1=0.5*(T+conj(T));
+A2=-0.5i*(T-conj(T));
+A3=0.5*(H+conj(H));
+A4=0.5i*(H-conj(H));
+
+X=SplitQuaternion(A1,A2,A3,A4);
+
+end
+
     end
 
 end
