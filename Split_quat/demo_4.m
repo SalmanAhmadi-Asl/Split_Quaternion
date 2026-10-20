@@ -28,9 +28,6 @@ fprintf('------------------------------------\n');
 R_rep = SplitQuaternionMatrixRealRep(SQM);
 disp(R_rep);
 
-[Q_1]=RealRepToSplitQuaternionMatrixSimple(R_rep);
-
-norm(Q_1-SQM)
 
 % Show block structure
 % fprintf('\nBlock structure of real representation:\n');
