@@ -237,7 +237,6 @@ classdef SplitQuaternionMatrix
                                      reshape(Q.C, varargin{:}), ...
                                      reshape(Q.D, varargin{:}));
         end
-        
         %% Horizontal concatenation
         function R = horzcat(varargin)
             A_cat = []; B_cat = []; C_cat = []; D_cat = [];
@@ -252,8 +251,7 @@ classdef SplitQuaternionMatrix
                 end
             end
             R = SplitQuaternionMatrix(A_cat, B_cat, C_cat, D_cat);
-        end
-        
+        end      
         %% Vertical concatenation
         function R = vertcat(varargin)
             A_cat = []; B_cat = []; C_cat = []; D_cat = [];
@@ -269,35 +267,6 @@ classdef SplitQuaternionMatrix
             end
             R = SplitQuaternionMatrix(A_cat, B_cat, C_cat, D_cat);
         end
-
-        %% Matrix Multiplication (fixed)
-%         function R = mtimes(left, right)
-%             % Handle three cases:
-%             % 1. SplitQuaternionMatrix * SplitQuaternionMatrix
-%             % 2. scalar * SplitQuaternionMatrix
-%             % 3. SplitQuaternionMatrix * scalar
-%             
-%             if isa(left, 'SplitQuaternionMatrix') && isa(right, 'SplitQuaternionMatrix')
-%                 % Case 1: SplitQuaternionMatrix * SplitQuaternionMatrix
-%                 A = left.A * right.A - left.B * right.B + left.C * right.C + left.D * right.D;
-%                 B = left.A * right.B + left.B * right.A - left.C * right.D + left.D * right.C;
-%                 C = left.A * right.C + left.C * right.A - left.B * right.D + left.D * right.B;
-%                 D = left.A * right.D + left.D * right.A + left.B * right.C - left.C * right.B;
-%                 R = SplitQuaternionMatrix(A, B, C, D);
-%                 
-%             elseif isnumeric(left) && isscalar(left) && isa(right, 'SplitQuaternionMatrix')
-%                 % Case 2: scalar * SplitQuaternionMatrix
-%                 R = SplitQuaternionMatrix(left * right.A, left * right.B, ...
-%                                           left * right.C, left * right.D);
-%                 
-%             elseif isa(left, 'SplitQuaternionMatrix') && isnumeric(right) && isscalar(right)
-%                 % Case 3: SplitQuaternionMatrix * scalar
-%                 R = SplitQuaternionMatrix(left.A * right, left.B * right, ...
-%                                           left.C * right, left.D * right);
-%             else
-%                 error('Invalid multiplication for SplitQuaternionMatrix');
-%             end
-%         end
         
 function R = mtimes(left, right)
     % Handle five cases:
@@ -519,6 +488,10 @@ end
         
         %% Convert to real matrix representation
         function mat = realMatrix(Q)
+            mat = [Q.A, Q.B; Q.C, Q.D];
+        end
+                %% Convert to real matrix representation
+        function mat = full_(Q)
             mat = [Q.A, Q.B; Q.C, Q.D];
         end
         
