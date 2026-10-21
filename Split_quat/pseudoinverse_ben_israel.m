@@ -29,14 +29,6 @@ function X = pseudoinverse_ben_israel(A, max_iter, tol)
         I = eye(size(AX));
         X = X * (2*I - AX);
         
-        % Check convergence
- %       residual = norm(X - X_old, 'fro');
-%         relative_residual = residual / (norm(X, 'fro') + eps);
-        
-%         if relative_residual < tol
-%             fprintf('Ben-Israel method converged after %d iterations\n', iter);
-%             break;
-%         end
     end
     
     if iter == max_iter
