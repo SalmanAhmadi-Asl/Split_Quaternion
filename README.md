@@ -198,36 +198,6 @@ N(q) = a² + b² - c² - d²
 ```
 This can be positive, negative, or zero, unlike the definite norm of standard quaternions.
 
-## Lightlike Elements
-Split quaternions with zero norm are called lightlike or null elements. Special care must be taken when computing inverses or logarithms for such elements.
-
-## Testing
-The toolbox includes comprehensive tests for both classes. To run the tests:
-```bash
-% Run all tests
-run_tests();
-
-% Test specific class
-test_split_quaternion();
-test_split_quaternion_matrix();
-```
-
-## Performance Considerations
-
-1. The `mtimes` and `times` methods for `SplitQuaternionMatrix` support multiplication with numeric matrices (real or complex) as well as scalar values
-
-1. Matrix operations leverage MATLAB's optimized matrix multiplication for component-wise operations
-
-2. For large matrices, consider using the `full_()` or `realMatrix()` conversions if you need to use standard MATLAB matrix functions
-
-## Limitations
-
-1. The logarithm function is only defined for split quaternions with positive norm
-
-2. The exponential function handles different norm cases but may have numerical issues near lightlike elements
-
-3. Matrix multiplication with numeric matrices assumes the numeric matrix is of compatible dimensions
-
 ## Citation
 If you use this toolbox in your research, please cite:
 
