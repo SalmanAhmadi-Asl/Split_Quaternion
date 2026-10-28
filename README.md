@@ -236,6 +236,5 @@ If you use this toolbox in your research, please cite:
   title={Split Quaternion Toolbox: A MATLAB Implementation},
   author={Salman Ahmadi-Asl, Abbas Moradi, Yang Zhang},
   year={2026},
-  howpublished={\url{https://github.com/yourusername/split-quaternion-toolbox}}
 }
 ```
